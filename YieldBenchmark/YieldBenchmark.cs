@@ -48,6 +48,19 @@ namespace YieldBenchmark
 
             return sum;
         }
+        
+        [Benchmark]
+        public int SpanArray()
+        {
+            int sum = 0;
+            Span<int> enumerable = GenArr(Count).AsSpan();
+            foreach (int item in enumerable)
+            {
+                sum += item;
+            }
+
+            return sum;
+        }
 
         [Benchmark]
         public int ArrayAsEnumerable()         
@@ -57,6 +70,32 @@ namespace YieldBenchmark
             foreach (int item in enumerable)
             {
                 sum += item;
+            }
+
+            return sum;
+        }
+        
+        [Benchmark]
+        public int ArrayFor()
+        {
+            int sum = 0;
+            int[] enumerable = GenArr(Count);
+            for (var index = 0; index < enumerable.Length; index++)
+            {
+                sum += enumerable[index];
+            }
+
+            return sum;
+        }
+        
+        [Benchmark]
+        public int SpanArrayFor()
+        {
+            int sum = 0;
+            Span<int> enumerable = GenArr(Count).AsSpan();
+            for (var index = 0; index < enumerable.Length; index++)
+            {
+                sum += enumerable[index];
             }
 
             return sum;
@@ -74,32 +113,6 @@ namespace YieldBenchmark
         }
         
         [Benchmark]
-        public int List()
-        {
-            int sum = 0;
-            List<int> enumerable = GenList(Count, false);
-            foreach (int item in enumerable)
-            {
-                sum += item;
-            }
-
-            return sum;
-        }
-
-        [Benchmark]
-        public int ListAsEnumerable()
-        {
-            int sum = 0;
-            IEnumerable<int> enumerable = GenList(Count, false);
-            foreach (int item in enumerable)
-            {
-                sum += item;
-            }
-
-            return sum;
-        }
-        
-        [Benchmark]
         public int ListPreAllocated()
         {
             int sum = 0;
@@ -113,10 +126,62 @@ namespace YieldBenchmark
         }
         
         [Benchmark]
+        public int ListPreAllocatedFor()
+        {
+            int sum = 0;
+            List<int> genArr = GenList(Count, true);
+            for (var index = 0; index < genArr.Count; index++)
+            {
+                sum += genArr[index];
+            }
+
+            return sum;
+        }
+        
+        [Benchmark]
         public int ListAsEnumerablePreAllocated()
         {
             int sum = 0;
             IEnumerable<int> enumerable = GenList(Count, true);
+            foreach (int item in enumerable)
+            {
+                sum += item;
+            }
+
+            return sum;
+        }
+        
+        [Benchmark]
+        public int List()
+        {
+            int sum = 0;
+            List<int> enumerable = GenList(Count, false);
+            foreach (int item in enumerable)
+            {
+                sum += item;
+            }
+
+            return sum;
+        }
+        
+        [Benchmark]
+        public int ListFor()
+        {
+            int sum = 0;
+            List<int> enumerable = GenList(Count, false);
+            for (var index = 0; index < enumerable.Count; index++)
+            {
+                sum += enumerable[index];
+            }
+
+            return sum;
+        }
+
+        [Benchmark]
+        public int ListAsEnumerable()
+        {
+            int sum = 0;
+            IEnumerable<int> enumerable = GenList(Count, false);
             foreach (int item in enumerable)
             {
                 sum += item;
