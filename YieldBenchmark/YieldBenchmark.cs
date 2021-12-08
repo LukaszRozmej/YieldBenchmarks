@@ -9,12 +9,13 @@ using BenchmarkDotNet.Jobs;
 namespace YieldBenchmark
 {
     [SimpleJob(RunStrategy.Throughput, RuntimeMoniker.Net60)]
+    [MemoryDiagnoser]
     public class YieldBenchmark
     {
         [Params(100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000)]
         public int Count { get; set; }
 
-        [Benchmark(Baseline = true)]
+        [Benchmark]
         public int Yield()        
         {
             int sum = 0;
@@ -71,38 +72,25 @@ namespace YieldBenchmark
 
             return arr;
         }
+        
+        [Benchmark]
+        public int List()
+        {
+            int sum = 0;
+            List<int> enumerable = GenList(Count, false);
+            foreach (int item in enumerable)
+            {
+                sum += item;
+            }
+
+            return sum;
+        }
 
         [Benchmark]
         public int ListAsEnumerable()
         {
             int sum = 0;
             IEnumerable<int> enumerable = GenList(Count, false);
-            foreach (int item in enumerable)
-            {
-                sum += item;
-            }
-
-            return sum;
-        }
-        
-        [Benchmark]
-        public int ListAsEnumerablePreAllocated()
-        {
-            int sum = 0;
-            IEnumerable<int> enumerable = GenList(Count, true);
-            foreach (int item in enumerable)
-            {
-                sum += item;
-            }
-
-            return sum;
-        }
-
-        [Benchmark]
-        public int List()
-        {
-            int sum = 0;
-            List<int> enumerable = GenList(Count, false);
             foreach (int item in enumerable)
             {
                 sum += item;
@@ -123,6 +111,19 @@ namespace YieldBenchmark
 
             return sum;
         }
+        
+        [Benchmark]
+        public int ListAsEnumerablePreAllocated()
+        {
+            int sum = 0;
+            IEnumerable<int> enumerable = GenList(Count, true);
+            foreach (int item in enumerable)
+            {
+                sum += item;
+            }
+
+            return sum;
+        }
 
         private List<int> GenList(int count, bool preAllocate)
         {
@@ -136,7 +137,7 @@ namespace YieldBenchmark
         }
 
         [Benchmark]
-        public int CustomEnumerableWithStructEnumerator()
+        public int EnumerableWithStructEnumerator()
         {
             int sum = 0;
             IEnumerable<int> enumerable = GenEnumerableWithStructEnumerator(Count);
@@ -149,7 +150,7 @@ namespace YieldBenchmark
         }
 
         [Benchmark]
-        public int CustomEnumerableWithClassEnumerator()
+        public int EnumerableWithClassEnumerator()
         {
             int sum = 0;
             IEnumerable<int> enumerable = GenEnumerableWithClassEnumerator(Count);
@@ -162,14 +163,14 @@ namespace YieldBenchmark
         }
         private IEnumerable<int> GenEnumerableWithStructEnumerator(int count) => new Enumerable(count, CreateStructEnumerator);
         private IEnumerable<int> GenEnumerableWithClassEnumerator(int count) => new Enumerable(count, CreateClassEnumerator);
-        private IEnumerator<int> CreateStructEnumerator(int count) => new StructEnumerator(count);
-        private IEnumerator<int> CreateClassEnumerator(int count) => new ClassEnumerator(count);
+        private IEnumerator<int> CreateStructEnumerator(int count) => new StructEnumeratorImpl(count);
+        private IEnumerator<int> CreateClassEnumerator(int count) => new ClassEnumeratorImpl(count);
 
         [Benchmark]
-        public int CustomStructEnumerator()
+        public int StructEnumerator()
         {
             int sum = 0;
-            StructEnumerator enumerator = new StructEnumerator(Count);
+            StructEnumeratorImpl enumerator = new StructEnumeratorImpl(Count);
             foreach (int item in enumerator)
             {
                 sum += item;
@@ -179,10 +180,10 @@ namespace YieldBenchmark
         }
         
         [Benchmark]
-        public int CustomClassEnumerator()
+        public int ClassEnumerator()
         {
             int sum = 0;
-            ClassEnumerator enumerator = new(Count);
+            ClassEnumeratorImpl enumerator = new(Count);
             foreach (int item in enumerator)
             {
                 sum += item;
@@ -191,18 +192,18 @@ namespace YieldBenchmark
             return sum;
         }
 
-        private struct StructEnumerator : IEnumerator<int>
+        private struct StructEnumeratorImpl : IEnumerator<int>
         {
             private readonly int _count;
             private int _index;
 
-            public StructEnumerator(int count)
+            public StructEnumeratorImpl(int count)
             {
                 _count = count;
                 _index = -1;
             }
 
-            public StructEnumerator GetEnumerator() => this;
+            public StructEnumeratorImpl GetEnumerator() => this;
 
             public bool MoveNext()
             {
@@ -221,18 +222,18 @@ namespace YieldBenchmark
             public void Dispose() { }
         }
         
-        private class ClassEnumerator : IEnumerator<int>
+        private class ClassEnumeratorImpl : IEnumerator<int>
         {
             private readonly int _count;
             private int _index;
 
-            public ClassEnumerator(int count)
+            public ClassEnumeratorImpl(int count)
             {
                 _count = count;
                 _index = -1;
             }
 
-            public ClassEnumerator GetEnumerator() => this;
+            public ClassEnumeratorImpl GetEnumerator() => this;
 
             public bool MoveNext()
             {
